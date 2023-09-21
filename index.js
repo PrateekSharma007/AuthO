@@ -1,4 +1,4 @@
-const express = require("express") ; 
+const express = require("express") 
 const app = express() ;
 
 const { auth } = require('express-openid-connect');
@@ -9,24 +9,27 @@ const config = {
   auth0Logout: true,
   secret: 'a long, randomly-generated string stored in env',
   baseURL: 'http://localhost:3000',
-  clientID: 'Jzz1hXcdOkEmddghZFC3SSyRdeQHbQd3',
-  issuerBaseURL: 'https://dev-yzdu4n1l2iry30jt.us.auth0.com'
+  clientID: 'LHiFBez6fTgfaFSzVwV76NSVwFvz7vFu',
+  issuerBaseURL: 'https://dev-8beoovnx71u7swwn.us.auth0.com'
 };
 
 // auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
 
 // req.isAuthenticated is provided from the auth router
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+app.get('/',requiresAuth(), (req, res) => {
+  if(req.oidc.isAuthenticated()){
+    res.send(JSON.stringify(req.oidc.user.email))
+    console.log(JSON.stringify(req.oidc.user.email))
+  } 
+  else{
+    res.send("Not logged in")
+  }
 });
 
-app.get('/profile', requiresAuth(), (req, res) => {
-    res.send(JSON.stringify(req.oidc.user));
-  });
 
 
 
 app.listen(3000, () => {
-    console.log("PORT 3000 is working")
+    console.log("Working port 3000")
 })
