@@ -31,31 +31,40 @@ app.get('/', requiresAuth(), async (req, res) => {
         frontend_domain_url: 'https://loyalty.thenftbrewery.com'
       });
       const authToken = tokenResponse.data;
-      console.log(authToken);
-      console.log(req.oidc.user.email);
-      const Email = req.oidc.user.email;
+      const Email = req.oidc.user.email
+
+      const otpResponse = await fetch('https://dev.backend.drops.thenftbrewery.com/api/frontend/oneOf/OTPForLogin',{
+        body : JSON.stringify({email : Email}),
+        method : 'POST',
+        headers : {'Content-Type' : 'application/json' , "Authorization": `Bearer ${authToken.token}`}
+      })
+
+
 
       try {
-        const otpResponse = await axios.post('https://dev.backend.drops.thenftbrewery.com/api/frontend/oneOf/OTPForLogin', {
+        const wallet = await axios.post('https://dev.backend.drops.thenftbrewery.com/api/frontend/oneOf/oneOfLogin', {
           email: Email,
+          otp: "111111"
         }, {
           headers: {
-            Authorization: `bearer ${authToken}`
+            "Authorization": `Bearer ${authToken.token}`
           }
         });
-
-        console.log('OTP', otpResponse.data);
-        res.send(otpResponse.data);
-      } catch (otpError) {
-        console.error('OTP API error:', otpError.message);
-        res.status(500).send('Error requesting OTP');
+      
+        console.log(wallet.data);
+        res.send(wallet.data);
+      } catch (error) {
+        console.error('Wallet API error:', error.message);
+        res.status(500).send('Error fetching wallet data');
       }
     } else {
+
       res.send('Please verify your email before logging in.');
     }
+
   } catch (error) {
     console.error('An error occurred:', error.message);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send(error);
   }
 });
 
