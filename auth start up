@@ -1,1 +1,6 @@
 
+1. login using your gmail. 
+2. fill out your credentials (tenant name) 
+3. on left you will see getting started, click on create application select regular web application -> node js and then you will be provided with your credentials. 
+4. to check who all have logged in you can see user management in left hand side click on it to check . 
+
