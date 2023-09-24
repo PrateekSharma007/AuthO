@@ -1,9 +1,11 @@
 const express = require("express") 
 const app = express() ;
 const axios = require("axios") ;
+const flash = require('express-flash');
 
 const { auth } = require('express-openid-connect');
 const { requiresAuth } = require('express-openid-connect');
+app.use(flash());
 
 
 const config = {
@@ -15,13 +17,8 @@ const config = {
   issuerBaseURL: 'https://dev-8beoovnx71u7swwn.us.auth0.com'
 };
 
-// auth router attaches /login, /logout, and /callback routes to the baseURL
+
 app.use(auth(config));
-
-//req.isAuthenticated is provided from the auth router
-
-
-
 
 
 app.get('/', requiresAuth(), async (req, res) => {
@@ -58,12 +55,12 @@ app.get('/', requiresAuth(), async (req, res) => {
         res.status(500).send('Error fetching wallet data');
       }
     } else {
-
-      res.send('Please verify your email before logging in.');
+      
+      res.redirect("/logout");
     }
 
   } catch (error) {
-    console.error('An error occurred:', error.message);
+
     res.status(500).send(error);
   }
 });
