@@ -1,11 +1,19 @@
 const express = require("express") 
 const app = express() ;
 const axios = require("axios") ;
-const flash = require('express-flash');
-
+const session = require("express-session")
+const request = require("request");
 const { auth } = require('express-openid-connect');
 const { requiresAuth } = require('express-openid-connect');
-app.use(flash());
+
+// const popup = require("popups")
+
+
+app.set('view engine', 'ejs');
+
+
+
+
 
 
 const config = {
@@ -21,9 +29,11 @@ const config = {
 app.use(auth(config));
 
 
+
 app.get('/', requiresAuth(), async (req, res) => {
   try {
     if (req.oidc.isAuthenticated() && req.oidc.user.email_verified === true) {
+      console.log(req.oidc.user)
       const tokenResponse = await axios.post('https://dev.backend.drops.thenftbrewery.com/api/frontend/frontendAccess', {
         frontend_domain_url: 'https://loyalty.thenftbrewery.com'
       });
@@ -46,7 +56,7 @@ app.get('/', requiresAuth(), async (req, res) => {
           headers: {
             "Authorization": `Bearer ${authToken.token}`
           }
-        });
+        },);
       
         console.log(wallet.data);
         res.send(wallet.data);
@@ -55,8 +65,8 @@ app.get('/', requiresAuth(), async (req, res) => {
         res.status(500).send('Error fetching wallet data');
       }
     } else {
-      
-      res.redirect("/logout");
+       // res.redirect('/logout')
+      res.render("emailverify")
     }
 
   } catch (error) {
@@ -64,6 +74,52 @@ app.get('/', requiresAuth(), async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+
+app.post('/resend-verification-email', requiresAuth(),  async (req, res) => {
+  try {
+    var options = {
+      method: 'POST',
+      url: 'https://dev-8beoovnx71u7swwn.us.auth0.com/oauth/token',
+      headers: {'content-type': 'application/x-www-form-urlencoded'},
+      data: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: 'LHiFBez6fTgfaFSzVwV76NSVwFvz7vFu',
+        client_secret: 'rLS9lJStnM1O55iQhAFlGdRxTuuj-lP54vzDcV0vnETCwP9vt2d1YN7KrcxJBKtP',
+        audience: 'https://dev-8beoovnx71u7swwn.us.auth0.com/api/v2/'
+      })
+    };
+    
+    axios.request(options).then(function (response) {
+      // console.log(response.data.access_token);
+      const access_token = response.data.access_token;
+
+      var options = {
+        method: 'POST',
+        url: 'https://dev-8beoovnx71u7swwn.us.auth0.com/api/v2/jobs/verification-email',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${access_token}`
+        },
+        data: {
+          user_id: "auth0|6512cc377fd48ae4910f78fe",
+          client_id: 'LHiFBez6fTgfaFSzVwV76NSVwFvz7vFu',
+          identity: {user_id: '6512cc377fd48ae4910f78fe', provider: 'auth0'}
+        }
+      };
+      
+      axios.request(options).then(function (response) {
+        console.log(response.data);
+    })
+  })}catch(error) {
+    console.error('Error sending verification email');
+    res.status(500).send('Error sending verification email');
+    res.send("error")
+  }
+});
+
+
+
 
 
 
